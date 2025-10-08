@@ -1,52 +1,415 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Region Explorer</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <script src="https://cdn.tailwindcss.com"></script>
+  <title>SpaceX - Official Website Clone</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fadeInUp': 'fadeInUp 2s ease forwards',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            'from': { 
+                                opacity: '0',
+                                transform: 'translateY(30px)'
+                            },
+                            'to': { 
+                                opacity: '1',
+                                transform: 'translateY(0)'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles for hover effects and scroll behavior */
+        .nav-link {
+            position: relative;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #fff;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        /* Ensure video covers properly on all devices */
+        .hero-video {
+            object-position: center 30%;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-video {
+                object-position: center 40%;
+            }
+        }
+    </style>
 </head>
-<body>
-     <h1>🌍 Region Explorer</h1>
-  
-  <div class="section">
-    <h2>Explore by Region</h2>
-    <div class="input-group">
-      <label for="regionSelect">Choose a region:</label>
-      <select id="regionSelect">
-        <option value="africa">Africa</option>
-        <option value="americas">Americas</option>
-        <option value="asia">Asia</option>
-        <option value="europe">Europe</option>
-        <option value="oceania">Oceania</option>
-      </select>
-      <button onclick="loadRegion()">Show Countries</button>
-    </div>
-  </div>
-  
-  <div class="section">
-    <h2>Search by Demonym</h2>
-    <div class="input-group">
-      <input type="text" id="demonymInput" placeholder="Enter a demonym (e.g. Nigerian, French)" />
-      <button onclick="searchByDemonym()">Search</button>
-    </div>
-  </div>
-  
-  <div class="section">
-    <h2>Advanced Search</h2>
-    <div class="input-group">
-      <input type="text" id="serviceInput" placeholder="Enter service (e.g. all, name/nigeria, region/asia)" />
-      <input type="text" id="fieldsInput" placeholder="Enter fields (e.g. name,capital,flags,population)" />
-      <button onclick="fetchWithFields()">Fetch Data</button>
-    </div>
-  </div>
+<body class="bg-black text-white font-sans overflow-x-hidden">
+    <!-- NAVBAR -->
+    <nav class="fixed top-0 left-0 w-full flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 bg-black/30 backdrop-blur-lg z-50 transition-all duration-300 navbar-scroll">
+        <!-- Logo -->
+        <div class="w-32 md:w-40">
+            <a href="index.html">
+                <img src="./image/logo.png" alt="SpaceX" class="w-full h-auto" />
+            </a>
+        </div>
 
-  <div id="status"></div>
-  <div class="countries" id="countriesContainer"></div>
+        <!-- Desktop Menu - Hidden on mobile -->
+        <div class="hidden lg:flex items-center space-x-8">
+            <a href="#" class="nav-link text-white text-xs uppercase tracking-wider hover:opacity-70 transition-opacity duration-300">Vehicles</a>
+            <a href="#" class="nav-link text-white text-xs uppercase tracking-wider hover:opacity-70 transition-opacity duration-300">Launches</a>
+            <a href="#" class="nav-link text-white text-xs uppercase tracking-wider hover:opacity-70 transition-opacity duration-300">Human Spaceflight</a>
+            <a href="#" class="nav-link text-white text-xs uppercase tracking-wider hover:opacity-70 transition-opacity duration-300">Rideshare</a>
+            <a href="#" class="nav-link text-white text-xs uppercase tracking-wider hover:opacity-70 transition-opacity duration-300">Starlink</a>
+            <a href="#" class="nav-link text-white text-xs uppercase tracking-wider hover:opacity-70 transition-opacity duration-300">Starshield</a>
+            <a href="#" class="nav-link text-white text-xs uppercase tracking-wider hover:opacity-70 transition-opacity duration-300">Company</a>
+            <a href="#" class="nav-link text-white text-xs uppercase tracking-wider hover:opacity-70 transition-opacity duration-300">Shop</a>
+        </div>
+
+        <!-- Right Controls -->
+        <div class="hidden md:flex items-center space-x-5">
+            <button class="launch-btn border border-white/40 bg-transparent text-white px-4 py-2 text-xs uppercase tracking-wider rounded-sm hover:bg-white/10 hover:-translate-y-0.5 transition-all duration-300">
+                Upcoming Launches
+            </button>
+            <span class="font-mono text-xs">T-15:16:30</span>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button class="lg:hidden text-white p-2" id="mobileMenuButton">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </nav>
+
+    <!-- Mobile Menu (Hidden by default) -->
+    <div class="lg:hidden fixed top-16 left-0 w-full bg-black/95 backdrop-blur-lg z-40 hidden transition-all duration-300" id="mobileMenu">
+        <div class="px-6 py-8 space-y-6">
+            <a href="#" class="block nav-link text-white text-sm uppercase tracking-wider hover:opacity-70 transition-opacity duration-300 py-2">Vehicles</a>
+            <a href="#" class="block nav-link text-white text-sm uppercase tracking-wider hover:opacity-70 transition-opacity duration-300 py-2">Launches</a>
+            <a href="#" class="block nav-link text-white text-sm uppercase tracking-wider hover:opacity-70 transition-opacity duration-300 py-2">Human Spaceflight</a>
+            <a href="#" class="block nav-link text-white text-sm uppercase tracking-wider hover:opacity-70 transition-opacity duration-300 py-2">Rideshare</a>
+            <a href="#" class="block nav-link text-white text-sm uppercase tracking-wider hover:opacity-70 transition-opacity duration-300 py-2">Starlink</a>
+            <a href="#" class="block nav-link text-white text-sm uppercase tracking-wider hover:opacity-70 transition-opacity duration-300 py-2">Starshield</a>
+            <a href="#" class="block nav-link text-white text-sm uppercase tracking-wider hover:opacity-70 transition-opacity duration-300 py-2">Company</a>
+            <a href="#" class="block nav-link text-white text-sm uppercase tracking-wider hover:opacity-70 transition-opacity duration-300 py-2">Shop</a>
+            <div class="pt-4 border-t border-white/20">
+                <button class="w-full border border-white/40 bg-transparent text-white px-4 py-3 text-xs uppercase tracking-wider rounded-sm hover:bg-white/10 transition-all duration-300 mb-4">
+                    Upcoming Launches
+                </button>
+                <span id="timer" class="font-mono text-sm block text-center">T-15:16:30</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- HERO SECTION -->
+    <section class="relative h-screen w-full flex items-end justify-start pt-16 pb-20 px-4 sm:px-8 md:px-16 overflow-hidden">
+        <!-- Video Background -->
+        <video class="absolute top-0 left-0 w-full h-full object-cover hero-video" autoplay muted loop playsinline>
+            <source src="https://sxcontent9668.azureedge.us/cms-assets/assets/20250929_Flight11_Website_916_V4_b70ce676b7.mp4" type="video/mp4">
+            <source src="https://sxcontent9668.azureedge.us/cms-assets/assets/20250929_Flight11_Website_169_V4_6eae758a82.mp4" type="video/mp4">
+        </video>
+
+        <!-- Gradient Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-b from-black/20 to-black/60 z-10"></div>
+
+        <!-- Hero Content -->
+        <div class="relative z-20 max-w-2xl animate-fadeInUp">
+            <div id="timer" class="font-mono text-sm text-gray-300 tracking-wider mb-3">T-7D 10:17:50</div>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold uppercase leading-tight mb-6 text-shadow-lg">
+                Starship's Eleventh Flight Test
+            </h1>
+            <a href="#" class="inline-flex items-center gap-2 uppercase text-sm font-semibold tracking-wider border-2 border-white px-6 py-3 hover:bg-white hover:text-black transition-all duration-300 group">
+                Watch 
+                <span class="group-hover:translate-x-1 transition-transform duration-300">→</span>
+            </a>
+        </div>
+    </section>
+
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('nav');
+            if (window.scrollY > 100) {
+                navbar.classList.add('bg-black/95', 'border-b', 'border-white/10');
+                navbar.classList.remove('bg-black/30');
+            } else {
+                navbar.classList.remove('bg-black/95', 'border-b', 'border-white/10');
+                navbar.classList.add('bg-black/30');
+            }
+        });
+
+        // Mobile menu toggle
+        document.getElementById('mobileMenuButton').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuButton = document.getElementById('mobileMenuButton');
+            
+            if (!mobileMenu.contains(event.target) && !menuButton.contains(event.target)) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+    </script>
+
+    <!-- Hero Section 3new -->
+    <section class="relative w-full h-screen overflow-hidden">
+        <!-- Background Video -->
+        <video autoplay muted loop playsinline class="mars-video absolute inset-0 w-full h-full object-cover">
+            <source src="https://sxcontent9668.azureedge.us/cms-assets/assets/Mars_Rotation_Web_HB_d96299f9de.mp4" type="video/mp4">
+        
+        </video>
+        
+        <!-- Dark Overlay -->
+        <!-- <div class="absolute inset-0 bg-black/60 z-10"></div> -->
+        
+        <!-- Content -->
+        <div class="ml-10 max-w-450 relative z-20 flex flex-col justify-center h-full px-9 md:pl-30 space-y-6">
+            <h2 class="text-5xl md:text-5xl lg:text-4xl font-bold uppercase leading-tight md:leading-[1.1]">
+                Making Life<br><span class="text-white">Multiplanetary</span>
+            </h2>
+            
+            <p class="text-gray-100 max-w-l text-base md:text- leading-relaxed mt-4">
+                SpaceX was founded under the belief that a future where humanity is out exploring the stars 
+                is <br> fundamentally more exciting than one where we are not.
+            </p>
+            
+            <div class="mt-8 arrow-hover">
+                <a href="#" class="inline-flex items-center justify-center w-fit px-8 py-4 border-2 border-white text-white uppercase tracking-widest text-base font-medium hover:bg-white hover:text-black transition-all duration-300">
+                    Explore
+                    <span class="ml-3 arrow text-xl">→</span>
+                </a>
+            </div>
+        </div>
+        
+    </section>
+
+
+      <!-- Hero Section with Background Image -->
+    <section class="relative h-screen bg-cover bg-center bg-no-repeat" style="background-image: url('https://sxcontent9668.azureedge.us/cms-assets/assets/Revolutionizing_Space_Tech_Desktop_ec67ad03c2.jpg');">
+        <!-- Dark Overlay -->
+        <div class="absolute inset-0 bg-black opacity-30"></div> 
+        
+        <!-- Content Container -->
+        <div class="relative z-2 flex flex-col flex  justify justify- h-full pl-50 md: pb-30 ml-80 pl-80  w-35 mb-80 pt-10 mt-3" >
+            <!-- Main Heading -->
+            <h2 class="text-[48px] leading-[1.1] font-bold uppercase mb-5 max-w-l ">
+                REVOLUTIONIZING SPACE <br> TECHNOLOGY
+            </h2>
+            
+            <!-- Description Text -->
+            <p class="text-gray-26 max-w-50 text-base md:text-lg leading-relaxed">
+                SpaceX's Starship spacecraft and Super Heavy rocket is a fully reusable transportation system <br> designed to carry both crew and cargo to Earth orbit, the Moon, Mars, and beyond.
+            </p>
+            
+            <!-- CTA Button -->
+            <div class="mt-8 arrow-hover">
+                <a href="#" class="inline-flex items-center justify-center w-fit px-6 py-3 border border-white text-white uppercase tracking-wide text-sm hover:bg-white hover:text-black transition-all duration-300">
+                    EXPLORE
+                    <span class="ml-2 arrow text-lg">→</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+
+
+
+   <!-- Hero Section 4 -->
+    <section class="relative w-full h-screen">
+        <!-- Background Video -->
+        <video autoplay muted loop playsinline 
+            poster="https://sxcontent9668.azureedge.us/cms-assets/assets/Leading_Launch_Service_Mobile_02_41fdea4331.jpg"
+            class="absolute inset-0 w-full h-full object-cover z-0">
+            <source src="https://sxcontent9668.azureedge.us/cms-assets/assets/Leading_Launch_Service_Mobile_02email_c06f4154a8.mp4" type="video/mp4">
+            Your browser does not support HTML5 video.
+        </video>
+
+        <!-- Dark Overlay -->
+        <div class="black-background-gradient-right image-wrapper"></div>
+
+        <!-- Content -->
+        <div class="relative z-20 flex flex-col justify- h-full pl-16 md:pl-24 pt-40 mt-30">
+            <!-- Main Heading -->
+            <h2 class="text-[44px] leading-[1.1] font-bold uppercase mb-2 max-w-l">
+                WORLD'S LEADING LAUNCH <br> SERVICE PROVIDER
+            </h2>
+            
+            <!-- Description Text -->
+            <p class="text-gray-200 max-w-50 md text-base md:text-lg leading-relaxed">
+                SpaceX leads the world in launches with its reliable, reusable rockets and is developing the fully <br> and rapidly reusable rockets necessary to transform humanity's ability to access space into <br> something as routine as air travel.
+            </p>
+            
+            <!-- CTA Button -->
+            <div class="mt-8 arrow-hover">
+                <a href="#" class="inline-flex items-center justify-center w-fit px-6 py-3 border border-white text-white uppercase tracking-wide text-sm hover:bg-white hover:text-black transition-all duration-300">
+                    RESERVE TOUR RIDE
+                    <span class="ml-2 arrow text-lg">→</span>
+                </a>
+            </div>
+    </section>
+
+
+
+
+  <!-- Hero Section with Background Image -->
+    <section class="relative pt-10 h-screen bg-cover bg-center bg-no-repeat" style="background-image: url('https://sxcontent9668.azureedge.us/cms-assets/assets/Advancing_Human_Spaceflight_Mobile_af242fde31.jpg');">
+        <!-- Dark Overlay -->
+        <!-- <div class="absolute inset-0 bg-black opacity-50"></div> -->
+        
+        <!-- Content Container -->
+        <div class="relative z-20 flex flex-col justify- h-full pl-20 md:pl-60 space-y-6">
+  <h2 class="text-[48px] leading-[1.1] font-bold uppercase mb-6">
+    Advancing human <br> spaceflight
+  </h2>
+  <p class="text-gray-200 max-w-50 md text-base md:text-lg leading-relaxed">
+   Since returning human spaceflight capabilities to the United States in 2020, SpaceX is helping <br> build a new era where not just hundreds of people, but thousands and ultimately millions will be <br> able to explore space.
+  </p>
+  <a href="#"
+     class="inline-flex items-center justify-center w-fit px-6 py-3 border border-white text-white uppercase tracking-wide text-sm hover:bg-white hover:text-black transition-all duration-300">
+    Explore
+    <span class="ml-2 text-lg">→</span>
+  </a>
+</div>
+    </section>
+
+
+    <!-- Hero Section 6 -->
+    <section class="relative w-full h-screen">
+        <!-- Background Video -->
+        <video autoplay muted loop playsinline 
+            poster="https://sxcontent9668.azureedge.us/cms-assets/assets/Delivering_Highspeed_Mobile_86f0698604.jpg"
+            class="absolute inset-0 w-full h-full object-cover z-0">
+            <source src="https://sxcontent9668.azureedge.us/cms-assets/assets/Starlink_12_10_20250428_Deploy_website_MOBILE_02_6c0f367324.mp4">
+            Your browser does not support HTML5 video.
+        </video>
+
+        <!-- Dark Overlay -->
+        <!-- <div class="absolute inset-0 bg-black/70 z-10"></div> -->
+
+        <!-- Content -->
+        <div class="relative z-20 flex flex-col justify-center h-full pl-16 md:pl-24 space-y-6">
+            <!-- Main Heading -->
+            <h1 class="text-[48px] leading-[1.1] font-bold uppercase mb-2 max-w-l">
+                DELIVERING HIGH-SPEED<br>INTERNET FROM SPACE
+            </h1>
+            
+            <!-- Description Text -->
+            <p class="text-gray-200 max-w-50 md text-base md:text-lg leading-relaxed">
+                  Starlink is the world’s most advanced satellite constellation in low-Earth orbit, delivering reliable <br> broadband internet capable of supporting streaming, online gaming, video calls, and more.
+            </p>
+            
+            <!-- CTA Button -->
+            <div class="mt-8 arrow-hover">
+                <a href="https://www.starlink.com/"
+                   class="inline-flex items-center justify-center w-fit px-6 py-3 border border-white text-white uppercase tracking-wide text-sm hover:bg-white hover:text-black transition-all duration-300">
+                    Explore
+                    <span class="ml-2 arrow text-lg">→</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+   <footer class="bg-black border-t border-gray-300 py-4">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-wrap justify-center gap-md:justify-between items-center">
+                <!-- Text from the image -->
+                <div class="footer-text flex flex-wrap justify-center gap-6 md:gap-8">
+                    <span>CAREERS</span>
+                    <span>UPDATES</span>
+                    <span>PRIVACY POLICY</span>
+                    <span>SUPPLIERS</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+
+
+
   
-  <div class="details-container" id="countryDetails">
-    <!-- Country details will be loaded here -->
-  </div>
-  <script src="./script.js"></script>
+ ...
+  <script>
+    // Navbar scroll effect
+    window.addEventListener('scroll', function() {
+      const navbar = document.querySelector('.navbar');
+      if (window.scrollY > 100) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+
+    // Scroll animations
+    const fadeElements = document.querySelectorAll('.fade-in');
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    });
+
+    fadeElements.forEach(element => {
+      observer.observe(element);
+    });
+
+    // Countdown timer (example)
+    function updateCountdown() {
+      const countdownElements = document.querySelectorAll('#timer');
+      countdownElements.forEach(element => {
+        // This is a simplified countdown - you can implement real countdown logic
+        const text = element.textContent;
+        if (text.includes('T-')) {
+          // Simulate countdown decrement for demo
+          setTimeout(() => {
+            element.textContent = text.replace(/\d+/g, match => {
+              return Math.max(0, parseInt(match) - 1);
+            });
+          }, 1000);
+        }
+      });
+    }
+
+    setInterval(updateCountdown, 1000);
+
+    // Launch button functionality
+    document.querySelector('.launch-btn').addEventListener('click', function() {
+      alert('Redirecting to launches page...');
+      // window.location.href = '/launches';
+    });
+
+    // Watch button functionality
+    document.querySelector('.watch-btn').addEventListener('click', function(e) {
+      e.preventDefault();
+      alert('Opening live stream...');
+      // window.open('https://www.spacex.com/launches/', '_blank');
+    });
+  </script>
 </body>
 </html>
